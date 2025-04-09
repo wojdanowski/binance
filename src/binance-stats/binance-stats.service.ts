@@ -17,12 +17,35 @@ export class BinanceStatsService {
 
   public async getBinanceStats(params: GetBinanceStatsParams): Promise<any> {
     // because Binance api does not let you provide startTime/endTime along with fromId
-    const result = await this.getIdRangeBasedOnTimeRange(params);
-    // get batches
+    const { startId, endId } = await this.getIdRangeBasedOnTimeRange(params);
 
-    // fetch data
+    const batches = await this.getTradesBatches(startId, endId, params.symbol);
 
-    // group statistics
+    const allRecordsGroupedBySeconds: Record<
+      string,
+      {
+        sum: number;
+        tradesCount: number;
+      }
+    > = {};
+
+    for await (const batch of batches) {
+      batch.forEach((trade) => {
+        const date = new Date(trade.T).toISOString().split('.')[0];
+
+        if (!allRecordsGroupedBySeconds[date]) {
+          allRecordsGroupedBySeconds[date] = {
+            sum: 0,
+            tradesCount: 0,
+          };
+        }
+
+        allRecordsGroupedBySeconds[date] = {
+          sum: allRecordsGroupedBySeconds[date].sum + parseFloat(trade.p),
+          tradesCount: allRecordsGroupedBySeconds[date].tradesCount + 1,
+        };
+      });
+    }
 
     return;
   }
