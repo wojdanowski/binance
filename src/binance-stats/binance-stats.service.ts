@@ -76,9 +76,7 @@ export class BinanceStatsService {
       if (previousEntryDate) {
         const previousAverage = analyzedResult[previousEntryDate].averagePrice;
         changePercentage =
-          ((previousAverage - averagePrice) /
-            ((previousAverage + averagePrice) / 2)) *
-          100;
+          ((averagePrice - previousAverage) / previousAverage) * 100;
       }
 
       analyzedResult[date] = {
