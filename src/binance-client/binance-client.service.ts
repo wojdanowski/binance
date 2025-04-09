@@ -21,10 +21,11 @@ export class BinanceClientService {
   constructor(private readonly httpService: HttpService) {}
 
   public async fetchTrades(params: {
+    symbol: string;
     startTime?: number;
     endTime?: number;
     limit?: number;
-    symbol?: string;
+    fromId?: number;
   }): Promise<BinanceAggTradesResponse[]> {
     const url = 'https://testnet.binance.vision/api/v3/aggTrades';
 
