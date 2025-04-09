@@ -18,7 +18,10 @@ export class GetBinanceStatsParams {
   endTime: number;
 }
 
-export class GetBinanceStatsResponse {
-  changePercentage: string;
-  averagePrice: string;
-}
+export type GetBinanceStatsResponse = Record<
+  string,
+  {
+    averagePrice: number;
+    changePercentage: string;
+  }
+>;

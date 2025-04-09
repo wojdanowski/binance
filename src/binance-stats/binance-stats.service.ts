@@ -7,7 +7,6 @@ import {
   BinanceAggTradesResponse,
   BinanceClientService,
 } from 'src/binance-client/binance-client.service';
-import { start } from 'repl';
 
 @Injectable()
 export class BinanceStatsService {
@@ -29,6 +28,8 @@ export class BinanceStatsService {
       }
     > = {};
 
+    let statistics: GetBinanceStatsResponse = {};
+
     for await (const batch of batches) {
       batch.forEach((trade) => {
         const date = new Date(trade.T).toISOString().split('.')[0];
@@ -45,12 +46,51 @@ export class BinanceStatsService {
           tradesCount: allRecordsGroupedBySeconds[date].tradesCount + 1,
         };
       });
+
+      statistics = {
+        ...statistics,
+        ...this.analyzeTrades(allRecordsGroupedBySeconds),
+      };
     }
 
-    return;
+    return statistics;
   }
 
-  public async *getTradesBatches(
+  private analyzeTrades(
+    allRecordsByDate: Record<
+      string,
+      {
+        sum: number;
+        tradesCount: number;
+      }
+    >,
+  ): GetBinanceStatsResponse {
+    const analyzedResult: GetBinanceStatsResponse = {};
+
+    Object.entries(allRecordsByDate).forEach(([date, value], i) => {
+      const averagePrice = value.sum / value.tradesCount;
+      let changePercentage = 0;
+      const previousEntryDate =
+        i === 0 ? null : Object.keys(analyzedResult)[i - 1];
+
+      if (previousEntryDate) {
+        const previousAverage = analyzedResult[previousEntryDate].averagePrice;
+        changePercentage =
+          ((previousAverage - averagePrice) /
+            ((previousAverage + averagePrice) / 2)) *
+          100;
+      }
+
+      analyzedResult[date] = {
+        averagePrice,
+        changePercentage: `${changePercentage.toFixed(4)} %`,
+      };
+    });
+
+    return analyzedResult;
+  }
+
+  private async *getTradesBatches(
     startId: number,
     endId: number,
     symbol: string,
