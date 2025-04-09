@@ -28,13 +28,20 @@ export class BinanceClientService {
   }): Promise<BinanceAggTradesResponse[]> {
     const url = 'https://testnet.binance.vision/api/v3/aggTrades';
 
+    const query = {
+      ...params,
+      limit: params.limit || 1000,
+    };
+
     const { data } = await firstValueFrom(
-      this.httpService.get<BinanceAggTradesResponse[]>(url, { params }).pipe(
-        catchError((error: AxiosError) => {
-          this.logger.error(error.response?.data);
-          throw new Error('Error while fetching binance data');
-        }),
-      ),
+      this.httpService
+        .get<BinanceAggTradesResponse[]>(url, { params: query })
+        .pipe(
+          catchError((error: AxiosError) => {
+            this.logger.error(error.response?.data);
+            throw new Error('Error while fetching binance data');
+          }),
+        ),
     );
 
     if (!data) {
